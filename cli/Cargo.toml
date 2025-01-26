@@ -1,0 +1,13 @@
+[package]
+name = "cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.27", features = ["derive"] }
+clap_complete = "4.5.42"
+directories = "6.0.0"
+serde = { version = "1.0.217", features = ["derive"] }
+template_engine = { path = "../template_engine" }
+toml = "0.8.19"
+walkdir = "2.5.0"
