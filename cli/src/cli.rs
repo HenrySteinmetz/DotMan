@@ -86,6 +86,13 @@ pub fn cli() -> Command {
                                 .index(1)
                                 .value_hint(ValueHint::Url)
                                 .value_parser(ValueParser::string()),
+                        )
+                        .arg(
+                            Arg::new("path")
+                                .required(true)
+                                .index(2)
+                                .value_hint(ValueHint::DirPath)
+                                .value_parser(ValueParser::string()),
                         ),
                 )
                 .subcommand(

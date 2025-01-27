@@ -65,6 +65,7 @@ fn set_home(matches: &ArgMatches) {
     let mut config_struct = get_config_file_content();
 
     config_struct.home_path = path.to_path_buf();
+    config_struct.git_init = false;
 
     write_config(&config_struct);
 

@@ -29,6 +29,14 @@ pub fn get_config_file_content() -> ConfigFile {
     toml::from_str(content.as_str()).expect("ERROR: Failed to parse config file.")
 }
 
+pub fn home_dir() -> PathBuf {
+    get_config_file_content().home_path
+}
+
+pub fn remote_url() -> Option<String> {
+    get_config_file_content().remote_url
+}
+
 pub fn write_config(content: &ConfigFile) {
     let mut config_file = OpenOptions::new()
         .write(true)

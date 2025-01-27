@@ -1,7 +1,3 @@
-use std::process::{exit, Command};
-
-use clap::ArgMatches;
-
 mod clone_from;
 mod commit;
 mod init;
@@ -9,7 +5,11 @@ mod pull;
 mod push;
 mod set_remote_url;
 
-pub fn check_git() {
+use std::process::{exit, Command};
+
+use clap::ArgMatches;
+
+fn check_git() {
     match Command::new("git").spawn() {
         Ok(_) => (),
         Err(e) => {
@@ -28,12 +28,13 @@ pub fn check_git() {
 }
 
 pub fn git(matches: &ArgMatches) {
+    check_git();
     match matches.subcommand() {
         Some(("clone_from", sub_matches)) => clone_from::clone_from(sub_matches),
         Some(("commit", sub_matches)) => commit::commit(sub_matches),
-        Some(("init", sub_matches)) => init::init(sub_matches),
-        Some(("pull", sub_matches)) => pull::pull(sub_matches),
-        Some(("push", sub_matches)) => push::push(sub_matches),
+        Some(("init", _sub_matches)) => init::init(),
+        Some(("pull", _sub_matches)) => pull::pull(),
+        Some(("push", _sub_matches)) => push::push(),
         Some(("set_remote_url", sub_matches)) => set_remote_url::set_remote_url(sub_matches),
         Some((subcommand, _)) => {
             eprintln!("Unknown subcommand {}", subcommand);
