@@ -2,12 +2,14 @@ use clap::ArgMatches;
 
 use std::{fs::File, io::Write, path::PathBuf, process::exit};
 
+mod apply;
 mod cli;
 mod config;
 mod git;
 mod source;
 mod utils;
 
+use apply::apply;
 use cli::cli;
 use config::ConfigFile;
 use git::git;
@@ -42,6 +44,7 @@ fn main() {
         Some(("set_home", sub_matches)) => set_home(sub_matches),
         Some(("source", sub_matches)) => source(sub_matches),
         Some(("git", sub_matches)) => git(sub_matches),
+        Some(("apply", _submatches)) => apply(),
         Some((subcommand, _)) => {
             eprintln!("Unknown subcommand {}", subcommand);
             exit(1);
