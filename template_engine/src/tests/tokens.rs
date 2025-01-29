@@ -1,21 +1,25 @@
+use anyhow::Result;
+
 use crate::{Expression, Token};
 
 #[test]
-fn tokinize_string_with_space() {
+fn tokinize_string_with_space() -> Result<()> {
     let line = r#""this is a test string""#.to_string();
 
-    let tokens = Expression::tokenize_line(line);
+    let tokens = Expression::tokenize_line(line)?;
 
     let expected_tokens = vec![Token::String("this is a test string".to_string())];
 
     assert_eq!(tokens, expected_tokens);
+
+    Ok(())
 }
 
 #[test]
-fn tokinize_assignment() {
+fn tokinize_assignment() -> Result<()> {
     let line = r#"$test = "testing""#.to_string();
 
-    let tokens = Expression::tokenize_line(line);
+    let tokens = Expression::tokenize_line(line)?;
 
     let expected_tokens = vec![
         Token::Variable("test".to_string()),
@@ -24,13 +28,15 @@ fn tokinize_assignment() {
     ];
 
     assert_eq!(tokens, expected_tokens);
+
+    Ok(())
 }
 
 #[test]
-fn tokinize_if_expression() {
+fn tokinize_if_expression() -> Result<()> {
     let line = r#"if "test" == "testing" $test = "hi""#.to_string();
 
-    let tokens = Expression::tokenize_line(line);
+    let tokens = Expression::tokenize_line(line)?;
 
     let expected_tokens = vec![
         Token::If,
@@ -43,13 +49,15 @@ fn tokinize_if_expression() {
     ];
 
     assert_eq!(tokens, expected_tokens);
+
+    Ok(())
 }
 
 #[test]
-fn tokinize_if_not_expression() {
+fn tokinize_if_not_expression() -> Result<()> {
     let line = r#"if "test" != "testing" $test = "hi""#.to_string();
 
-    let tokens = Expression::tokenize_line(line);
+    let tokens = Expression::tokenize_line(line)?;
 
     let expected_tokens = vec![
         Token::If,
@@ -62,15 +70,19 @@ fn tokinize_if_not_expression() {
     ];
 
     assert_eq!(tokens, expected_tokens);
+
+    Ok(())
 }
 
 #[test]
-fn tokinize_comment() {
+fn tokinize_comment() -> Result<()> {
     let line = "// This is a test comment".to_string();
 
-    let tokens = Expression::tokenize_line(line);
+    let tokens = Expression::tokenize_line(line)?;
 
     let expected_tokens = vec![Token::Comment];
 
     assert_eq!(tokens, expected_tokens);
+
+    Ok(())
 }

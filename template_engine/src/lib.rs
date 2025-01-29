@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use anyhow::{anyhow, Result};
+
 #[cfg(test)]
 mod tests;
 
@@ -29,185 +31,92 @@ enum Token {
 }
 
 impl Expression {
-    fn from_string(string: String) -> Self {
-        let tokens = Self::tokenize_line(string);
+    fn from_string(string: String) -> Result<Self> {
+        let tokens = Self::tokenize_line(string)?;
 
         Expression::from_tokens(tokens)
     }
 
-    fn from_tokens(tokens: Vec<Token>) -> Self {
+    fn from_tokens(tokens: Vec<Token>) -> Result<Self> {
         let mut token_iter = tokens.into_iter();
 
-        match token_iter.next() {
-            Some(token) => match token {
-                Token::Comment => return Self::Comment,
-                Token::String(str) => return Self::StringLiteral(str),
-                Token::If => {
-                    if let Some(next_token) = token_iter.next() {
-                        match next_token {
-                            Token::Variable(var) => {
-                                if let Some(next_token) = token_iter.next() {
-                                    match next_token {
-                                        Token::Condition(bool) => {
-                                            if let Some(next_token) = token_iter.next() {
-                                                match next_token {
-                                                    Token::String(str) if bool => {
-                                                        return Self::IfStatement(
-                                                            Condition::IsEqual(
-                                                                Value::Variable(var),
-                                                                Value::Literal(str),
-                                                            ),
-                                                            Box::new(Self::from_tokens(
-                                                                token_iter.collect(),
-                                                            )),
-                                                        )
-                                                    }
-                                                    Token::String(str) => {
-                                                        return Self::IfStatement(
-                                                            Condition::IsNotEqual(
-                                                                Value::Variable(var),
-                                                                Value::Literal(str),
-                                                            ),
-                                                            Box::new(Self::from_tokens(
-                                                                token_iter.collect(),
-                                                            )),
-                                                        )
-                                                    }
-                                                    Token::Variable(var2) if bool => {
-                                                        return Self::IfStatement(
-                                                            Condition::IsEqual(
-                                                                Value::Variable(var),
-                                                                Value::Variable(var2),
-                                                            ),
-                                                            Box::new(Self::from_tokens(
-                                                                token_iter.collect(),
-                                                            )),
-                                                        )
-                                                    }
-                                                    Token::Variable(var2) => {
-                                                        return Self::IfStatement(
-                                                            Condition::IsNotEqual(
-                                                                Value::Variable(var),
-                                                                Value::Variable(var2),
-                                                            ),
-                                                            Box::new(Self::from_tokens(
-                                                                token_iter.collect(),
-                                                            )),
-                                                        )
-                                                    }
-                                                    _ => panic!("Expected variable or literal!"),
-                                                }
-                                            } else {
-                                                panic!("Missing value!");
-                                            }
-                                        }
-                                        _ => panic!("Expected comparison!"),
-                                    }
-                                } else {
-                                    panic!("Missing comparison operator and value!");
-                                }
-                            }
-                            Token::String(str) => {
-                                if let Some(next_token) = token_iter.next() {
-                                    match next_token {
-                                        Token::Condition(bool) => {
-                                            if let Some(next_token) = token_iter.next() {
-                                                match next_token {
-                                                    Token::String(str2) if bool => {
-                                                        return Self::IfStatement(
-                                                            Condition::IsEqual(
-                                                                Value::Literal(str),
-                                                                Value::Literal(str2),
-                                                            ),
-                                                            Box::new(Self::from_tokens(
-                                                                token_iter.collect(),
-                                                            )),
-                                                        )
-                                                    }
-                                                    Token::String(str2) => {
-                                                        return Self::IfStatement(
-                                                            Condition::IsNotEqual(
-                                                                Value::Literal(str),
-                                                                Value::Literal(str2),
-                                                            ),
-                                                            Box::new(Self::from_tokens(
-                                                                token_iter.collect(),
-                                                            )),
-                                                        )
-                                                    }
-                                                    Token::Variable(var2) if bool => {
-                                                        return Self::IfStatement(
-                                                            Condition::IsEqual(
-                                                                Value::Literal(str),
-                                                                Value::Variable(var2),
-                                                            ),
-                                                            Box::new(Self::from_tokens(
-                                                                token_iter.collect(),
-                                                            )),
-                                                        )
-                                                    }
-                                                    Token::Variable(var2) => {
-                                                        return Self::IfStatement(
-                                                            Condition::IsNotEqual(
-                                                                Value::Literal(str),
-                                                                Value::Variable(var2),
-                                                            ),
-                                                            Box::new(Self::from_tokens(
-                                                                token_iter.collect(),
-                                                            )),
-                                                        )
-                                                    }
-                                                    _ => panic!("Expected variable or literal!"),
-                                                }
-                                            } else {
-                                                panic!("Missing value!");
-                                            }
-                                        }
-                                        _ => panic!("Expected comparison!"),
-                                    }
-                                } else {
-                                    panic!("Missing comparison operator and value!");
-                                }
-                            }
-                            _ => panic!("Expected variable or literal!"),
-                        }
-                    } else {
-                        panic!("Missing values and comparison operator!")
-                    }
-                }
-                Token::Variable(var) => match token_iter.next() {
-                    Some(next_token) => match next_token {
-                        Token::Assignment => {
-                            if let Some(value) = token_iter.next() {
-                                match value {
-                                    Token::Variable(var2) => {
-                                        return Self::VariableAssignment(var, Value::Variable(var2))
-                                    }
-                                    Token::String(str) => {
-                                        return Self::VariableAssignment(var, Value::Literal(str))
-                                    }
-                                    _ => panic!("Expected variable or string literal!"),
-                                }
-                            } else {
-                                panic!("Missing variable or string literal!");
-                            }
-                        }
-                        _ => panic!("Expected assignment operator!"),
-                    },
-                    None => return Self::VariableValue(var),
-                },
-                Token::Assignment => {
-                    panic!("Assignment operator can not be the first token of a line!")
-                }
-                Token::Condition(_) => {
-                    panic!("A condition operatas mutable more than once at a timeor can not be the first token of a line!")
-                }
-            },
-            None => panic!("No tokens provided!"),
+        let next_token = match token_iter.next() {
+            Some(t) => t,
+            None => return Err(anyhow!("No tokens provided!")),
+        };
+
+        match next_token {
+            Token::Comment => Ok(Self::Comment),
+            Token::String(str) => Ok(Self::StringLiteral(str)),
+            Token::Variable(var) => Self::parse_variable(&mut token_iter, var),
+            Token::If => Self::parse_if_expression(&mut token_iter),
+            _ => Err(anyhow!("Unexpected token")),
         }
     }
 
-    pub(crate) fn tokenize_line(string: String) -> Vec<Token> {
+    fn parse_variable(
+        token_iter: &mut impl Iterator<Item = Token>,
+        variable_name: String,
+    ) -> Result<Self> {
+        let next_token = token_iter.next();
+
+        match next_token {
+            Some(assignment) if assignment == Token::Assignment => {
+                let next_token = token_iter.next();
+
+                match next_token {
+                    Some(Token::String(str)) => Ok(Self::VariableAssignment(
+                        variable_name,
+                        Value::Literal(str.to_string()),
+                    )),
+                    Some(Token::Variable(var2)) => Ok(Self::VariableAssignment(
+                        variable_name,
+                        Value::Variable(var2.to_string()),
+                    )),
+                    Some(_) | None => Err(anyhow!(
+                        "Expected string literal or variable name after assignment."
+                    )),
+                }
+            }
+            Some(_) => Err(anyhow!("Expected assignment operator.")),
+            None => Ok(Self::VariableValue(variable_name)),
+        }
+    }
+
+    fn parse_if_expression(token_iter: &mut impl Iterator<Item = Token>) -> Result<Self> {
+        let val1 = match token_iter.next() {
+            Some(Token::String(str)) => Value::Literal(str),
+            Some(Token::Variable(var)) => Value::Variable(var),
+            Some(_) => return Err(anyhow!("Expected variable or string literal.")),
+            None => return Err(anyhow!("Missing tokens after `if`.")),
+        };
+
+        let cond = match token_iter.next() {
+            Some(Token::Condition(cond)) => cond,
+            Some(_) | None => return Err(anyhow!("Expected comparison operator.")),
+        };
+
+        let val2 = match token_iter.next() {
+            Some(Token::String(str)) => Value::Literal(str),
+            Some(Token::Variable(var)) => Value::Variable(var),
+            Some(_) => return Err(anyhow!("Expected variable or string literal.")),
+            None => return Err(anyhow!("Missing token after `if`.")),
+        };
+
+        if cond {
+            Ok(Self::IfStatement(
+                Condition::IsEqual(val1, val2),
+                Box::new(Self::from_tokens(token_iter.collect())?),
+            ))
+        } else {
+            Ok(Self::IfStatement(
+                Condition::IsNotEqual(val1, val2),
+                Box::new(Self::from_tokens(token_iter.collect())?),
+            ))
+        }
+    }
+
+    pub(crate) fn tokenize_line(string: String) -> Result<Vec<Token>> {
         let mut tokens = Vec::new();
         let mut current_token = String::new();
         let mut in_string = false;
@@ -220,6 +129,7 @@ impl Expression {
 
         while let Some(char) = char_iter.next() {
             if char == ' ' && skip_space {
+                #[cfg(test)]
                 println!("Space skipped!");
                 skip_space = false;
                 continue;
@@ -234,9 +144,11 @@ impl Expression {
                     tokens.push(Token::String(current_token.clone()));
                     current_token.clear();
                     in_string = false;
+                    #[cfg(test)]
                     println!("String end");
                 } else {
                     in_string = true;
+                    #[cfg(test)]
                     println!("In string");
                 }
             }
@@ -249,7 +161,7 @@ impl Expression {
 
             if char == '/' && slash_seen && !escape && !in_string {
                 tokens.push(Token::Comment);
-                return tokens;
+                return Ok(tokens);
             }
 
             if char == '/' && !escape && !in_string {
@@ -268,9 +180,9 @@ impl Expression {
                         _ => {
                             #[cfg(test)]
                             println!("Char: {}\nNext char: {}", char, next_char);
-                            panic!(
+                            return Err(anyhow!(
                                 "Unknown expression encountered.\nDid you mean to do a comparison?"
-                            );
+                            ));
                         }
                     }
                 } else {
@@ -302,7 +214,7 @@ impl Expression {
                         }
                     }
                 } else {
-                    panic!("Unforseen end of expression.\nDid you forget to enter a value for your assignment?");
+                    return Err(anyhow!("Unforseen end of expression.\nDid you forget to enter a value for your assignment?"));
                 }
             }
 
@@ -331,7 +243,7 @@ impl Expression {
             println!("Current token: {:#?}", current_token);
         }
 
-        tokens
+        Ok(tokens)
     }
 }
 
@@ -348,60 +260,84 @@ pub struct TemplateEngine {
 }
 
 impl TemplateEngine {
-    fn convert_value(&self, value: Value) -> String {
+    /// Takes in source and template files (true = source && false = template) and returns their parsed and evaluted content
+    pub fn parse_files(input: Vec<(String, bool)>) -> Result<Vec<String>> {
+        let mut results = Vec::new();
+
+        let mut template_engine = Self::default();
+
+        for (content, source) in input {
+            if source {
+                template_engine.evaluate_source_file(content.clone())?;
+            } else {
+                template_engine.evaluate_template_file(content.clone())?;
+            }
+
+            results.push(template_engine.new_file_contents(&content));
+        }
+
+        Ok(results)
+    }
+
+    fn convert_value(&self, value: Value) -> Result<String> {
         match value {
-            Value::Literal(lit) => lit,
+            Value::Literal(lit) => Ok(lit),
             Value::Variable(var) => match self.variables.get(&var) {
-                Some(val) => val.to_string(),
-                None => panic!("Could not find value of variable with identifier `{}`", var),
+                Some(val) => Ok(val.to_string()),
+                None => Err(anyhow!(
+                    "Could not find value of variable with identifier `{}`",
+                    var
+                )),
             },
         }
     }
 
-    fn evaluate_expression(&mut self, expression: Expression) -> Option<String> {
+    fn evaluate_expression(&mut self, expression: Expression) -> Result<Option<String>> {
         use Expression::*;
 
         match expression {
             VariableAssignment(identifier, value) => {
-                let _ = self.variables.insert(identifier, self.convert_value(value));
-                return None;
+                let _ = self
+                    .variables
+                    .insert(identifier, self.convert_value(value)?);
+                return Ok(None);
             }
             VariableValue(identifier) => match self.variables.get(&identifier) {
-                Some(x) => return Some(x.clone()),
-                None => {
-                    panic!("Unknown identifier `{}`", identifier)
-                }
+                Some(x) => return Ok(Some(x.clone())),
+                None => return Err(anyhow!("Unknown identifier `{}`", identifier)),
             },
-            StringLiteral(lit) => return Some(lit),
+            StringLiteral(lit) => return Ok(Some(lit)),
             IfStatement(condition, expression) => match condition {
                 Condition::IsEqual(val1, val2) => {
-                    if self.convert_value(val1) == self.convert_value(val2) {
+                    if self.convert_value(val1)? == self.convert_value(val2)? {
                         return self.evaluate_expression(*expression);
                     } else {
-                        return None;
+                        return Ok(None);
                     }
                 }
                 Condition::IsNotEqual(val1, val2) => {
-                    if self.convert_value(val1) != self.convert_value(val2) {
+                    if self.convert_value(val1)? != self.convert_value(val2)? {
                         return self.evaluate_expression(*expression);
                     } else {
-                        return None;
+                        return Ok(None);
                     }
                 }
             },
-            Comment => None,
+            Comment => Ok(None),
         }
     }
 
-    pub fn evaluate_source_file(&mut self, content: String) {
+    pub fn evaluate_source_file(&mut self, content: String) -> Result<()> {
         for (index, string) in content.lines().enumerate() {
-            let expression = Expression::from_string(string.to_string());
-            let template_result = (self.evaluate_expression(expression), index);
+            let expression = Expression::from_string(string.to_string())?;
+            let template_result = (self.evaluate_expression(expression)?, index);
             self.template_results.push(template_result);
         }
+
+        Ok(())
     }
 
-    pub fn evaluate_template_file(&mut self, content: String) {
+    pub fn evaluate_template_file(&mut self, content: String) -> Result<()> {
         let mut template_lines = vec![];
 
         for (index, line) in content.lines().enumerate() {
@@ -430,8 +366,8 @@ impl TemplateEngine {
         println!("Template lines:\n{:#?}\n", template_lines);
 
         for (template_line, line_number) in template_lines.into_iter() {
-            let expression = Expression::from_string(template_line.to_string());
-            let template_result = (self.evaluate_expression(expression.clone()), line_number);
+            let expression = Expression::from_string(template_line.to_string())?;
+            let template_result = (self.evaluate_expression(expression.clone())?, line_number);
             #[cfg(test)]
             println!(
                 "Line:\n{:#?}\nExpression:\n{:#?}\nResult:\n{:#?}",
@@ -439,11 +375,13 @@ impl TemplateEngine {
             );
             self.template_results.push(template_result);
         }
+
+        Ok(())
     }
 
     /// This function adds a newline at the end of the file
     /// and is reliant on the fact that the template results are ordered
-    pub fn new_file_contents(&mut self, content: String) -> String {
+    pub fn new_file_contents(&mut self, content: &String) -> String {
         #[cfg(test)]
         println!("Results:\n{:#?}", self.template_results);
 

@@ -7,7 +7,7 @@ fn replace_single_line() {
     let mut engine = TemplateEngine::default();
     engine.template_results = vec![(Some("Replaced".to_string()), 1)];
 
-    let output = engine.new_file_contents(test_file.clone());
+    let output = engine.new_file_contents(&test_file);
 
     let expected_output = format!("Line1\nReplaced\nLine3\n");
 
@@ -24,7 +24,7 @@ fn replace_multiple_lines() {
         (Some("Replaced line 5".to_string()), 4),
     ];
 
-    let output = engine.new_file_contents(test_file.clone());
+    let output = engine.new_file_contents(&test_file);
 
     let expected_output = format!("Line1\nLine2\nReplaced line 3\nLine4\nReplaced line 5\n");
 
