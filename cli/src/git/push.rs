@@ -10,7 +10,7 @@ pub fn push() {
     {
         Ok(_) => exit(0),
         Err(e) => {
-            eprintln!("ERROR: Encountered the following error while trying to initialize the git repository:\n{}", e.to_string());
+            eprintln!("ERROR: Encountered the following error while trying to push local git changes to repository:\n{}", e.to_string());
             exit(1);
         }
     }

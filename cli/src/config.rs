@@ -8,6 +8,7 @@ pub struct ConfigFile {
     pub managed_paths: Vec<LinkedFile>,
     pub remote_url: Option<String>,
     pub git_init: bool,
+    pub applied_paths: Vec<PathBuf>,
 }
 
 impl Default for ConfigFile {
@@ -22,6 +23,7 @@ impl Default for ConfigFile {
             managed_paths: Vec::new(),
             remote_url: None,
             git_init: false,
+            applied_paths: Vec::new(),
         }
     }
 }

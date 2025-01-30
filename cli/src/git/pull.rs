@@ -10,7 +10,7 @@ pub fn pull() {
     {
         Ok(_) => exit(0),
         Err(e) => {
-            eprintln!("ERROR: Encountered the following error while trying to initialize the git repository:\n{}", e.to_string());
+            eprintln!("ERROR: Encountered the following error while trying to pull upstream changes to local git repository:\n{}", e.to_string());
             exit(1);
         }
     }

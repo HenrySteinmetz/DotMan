@@ -381,7 +381,7 @@ impl TemplateEngine {
 
     /// This function adds a newline at the end of the file
     /// and is reliant on the fact that the template results are ordered
-    pub fn new_file_contents(&mut self, content: &String) -> String {
+    pub fn new_file_contents(&self, content: &String) -> String {
         #[cfg(test)]
         println!("Results:\n{:#?}", self.template_results);
 
@@ -414,6 +414,9 @@ impl TemplateEngine {
             } else {
                 #[cfg(test)]
                 println!("No remaining template results!");
+
+                result_file += format!("{}\n", line).as_str();
+                return result_file;
             }
             #[cfg(test)]
             println!("Result line:\n{}", line);

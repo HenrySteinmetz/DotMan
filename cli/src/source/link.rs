@@ -1,7 +1,5 @@
-use std::{path::PathBuf, process::exit};
-use std::os::unix::fs::symlink;
-
 use clap::ArgMatches;
+use std::{path::PathBuf, process::exit};
 
 use crate::{get_config_file_content, utils::write_config};
 
@@ -34,13 +32,13 @@ pub fn link(sub_matches: &ArgMatches) {
         .filter_map(|mut linked_file| {
             if linked_file.source == *source_path {
                 if was_modified {
-                    eprintln!("ERROR: Path `{:#?}` is used mulitple times.\nPlease remove the duplicates.\nThe first occurence of the path was linked.", source_path);
+                    eprintln!("ERROR: Source path `{:#?}` is used mulitple times.\nPlease remove the duplicates.\nThe first occurence of the path was linked.", source_path);
                     exit(1);
                 }
                 if linked_file.destination.is_some() {
                     println!("WARNING: Source file already had a link  that now changed.");
-                    was_modified = true;
                 }
+                was_modified = true;
                 linked_file.destination = Some(destination_path.to_path_buf());
             }
 

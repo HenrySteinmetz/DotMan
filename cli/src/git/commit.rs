@@ -19,7 +19,7 @@ pub fn commit(sub_matches: &ArgMatches) {
         Ok(_) => exit(0),
         Err(e) => {
             eprintln!(
-                "ERROR: Encountered the following error while trying to commit\n{}",
+                "ERROR: Encountered the following error while trying to commit local changes\n{}",
                 e.to_string()
             );
             exit(1);

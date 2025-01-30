@@ -6,6 +6,8 @@ use std::{
     path::PathBuf,
 };
 
+use walkdir::WalkDir;
+
 use crate::config::ConfigFile;
 
 pub fn config_file_path() -> PathBuf {
@@ -33,8 +35,31 @@ pub fn home_dir() -> PathBuf {
     get_config_file_content().home_path
 }
 
-pub fn remote_url() -> Option<String> {
-    get_config_file_content().remote_url
+pub fn flat_file_array(path: PathBuf) -> Vec<PathBuf> {
+    let mut ret = Vec::new();
+
+    if path.is_dir() {
+        for entry in WalkDir::new(path) {
+            let entry = match entry {
+                Ok(entry) => entry,
+                Err(e) => {
+                    eprintln!(
+                        "WARING: Failed to add file with error `{}. Skipping...`",
+                        e.to_string()
+                    );
+                    continue;
+                }
+            };
+
+            if entry.path().is_dir() {
+                ret.extend(flat_file_array(entry.path().to_path_buf()).into_iter());
+            } else {
+                ret.push(entry.path().to_path_buf());
+            }
+        }
+    }
+
+    ret
 }
 
 pub fn write_config(content: &ConfigFile) {
